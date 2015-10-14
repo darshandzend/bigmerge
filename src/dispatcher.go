@@ -1,36 +1,41 @@
 package bigmerge
 
-func dispatcher(results chan<- [][]int, input <-chan int) {
+import (
+	"fmt"
+	"sort"
+	"sync"
+)
 
-	/* if MAXGOROUTINES set
-	this means z = current total input size / MAXGOROUTINES per goroutine
+const MAXPERGO = 10
 
+func dispatcher(results chan<- []int, input <-chan int) {
 
-	*/
+	nextBatch := make([]int, MAXPERGO)
+	var sorters sync.WaitGroup //TODO: Is this necessary?
+	i := 0
+	for n := range input {
+		nextBatch[i] = n
+		i++
+		if i == MAXPERGO {
+			sorters.Add(1)
+			go sorter(results, nextBatch, &sorters)
+			i = 0
+			nextBatch = make([]int, MAXPERGO)
+		}
+	}
+	//process the rest
+	if i != 0 {
+		sorters.Add(1)
+		go sorter(results, nextBatch, &sorters)
+	}
 
-	/*if MAX_N_PER_GOROUTINE set
-	this means z = MAX_N_PER_GOROUTINE
-
-	So wait for z inputs to come in
-		when z or channel close,
-			launch a new sorter goroutine with z inputs, provide results channel
-
-
-	wait on all goroutines to close
-
-	exit
-
-	*/
-
+	sorters.Wait()
+	fmt.Println("All inputs dispatched")
+	close(results)
 }
 
-func sorter(results chan<- [][]int, in []int) {
-	/* Choose the sort algorithm for this input size TODO:Make this configurable
-		Also if you choose Mergesort here, MERGE-SORTA-CEPTION!
-	sort in[]
-	put it in results
-
-	exit
-	*/
-
+func sorter(results chan<- []int, in []int, sorters *sync.WaitGroup) {
+	defer sorters.Done()
+	sort.Ints(in)
+	results <- in
 }

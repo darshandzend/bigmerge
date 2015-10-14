@@ -1,27 +1,52 @@
 package bigmerge
 
-func merger(results chan [][]int) {
-	/*
-		The master merger.
+import "fmt"
 
-		wait on results for any new slice to come in
+func merger(curOp chan<- []int,
+	done chan<- struct{},
+	results chan []int) {
 
-		EITHER
-		decide on how many mergers to launch
-			nom = n / threshold no. of slices to merge
-		launch nom mergers, give them threshold arrays and results channel
-		OR
-		take first two slices, merge, put it back in results.
-			(also update currentResult)
+	for r := range results {
+		fmt.Println(r)
+	}
+	done <- struct{}{}
+	curOp <- []int{1, 2, 3}
 
-		CHANNEL LOOP! CAREFUL WITH DEADLOCKS!!
-
-		when no more slices to merge, exit.
-	*/
 }
 
-func merge(one, two []int) []int {
+func merge(results chan<- []int, one, two []int) {
+	fmt.Println("Merging", one, two)
+	results <- append(one, two...)
+
 	/*
-		simple merge function
+		merged := make([]int, len(left)+len(right))
+
+		j, k := 0, 0
+		for i := 0; i < len(merged); i++ {
+			if j == len(left) {
+				for _, d := range right[k:] {
+					merged[i] = d
+					i++
+				}
+				break
+			}
+			if k == len(right) {
+				for _, d := range left[j:] {
+					merged[i] = d
+					i++
+				}
+				break
+			}
+
+			if left[j] < right[k] {
+				merged[i] = left[j]
+				j++
+			} else {
+				merged[i] = right[k]
+				k++
+			}
+		}
+		results <- merged
 	*/
+
 }

@@ -1,6 +1,6 @@
 package bigmerge
 
-import "fmt"
+import "log"
 
 type BigMerger interface {
 	IpChan() chan<- int
@@ -29,15 +29,31 @@ func (b bigMerge) IpChan() chan<- int    { return b.ip }
 func (b bigMerge) CurOp() []int          { return b.curOp }
 func (b bigMerge) Done() <-chan struct{} { return b.done }
 
+type auxResult struct {
+	auxr  chan []int
+	count int
+}
+
+func (a *auxResult) insert(arr []int) {
+	a.count++
+	a.auxr <- arr
+}
+
+func (a *auxResult) remove() []int {
+	a.count--
+	return <-a.auxr
+}
+
 func (b bigMerge) run() {
 
 	results := make(chan []int, 100)
 	go dispatcher(results, b.ip)
 
-	op := make(chan []int)
-	go merger(op, b.done, results)
+	sorted := make(chan []int)
+	go merger(sorted, results)
 
-	fmt.Println(<-op)
+	log.Println(<-sorted)
+	b.done <- struct{}{}
 
 	//Meahwhile, also wait for user commands
 

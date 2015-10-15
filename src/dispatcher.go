@@ -1,7 +1,7 @@
 package bigmerge
 
 import (
-	"fmt"
+	"log"
 	"sort"
 	"sync"
 )
@@ -30,8 +30,7 @@ func dispatcher(results chan<- []int, input <-chan int) {
 	}
 
 	sorters.Wait()
-	fmt.Println("All inputs dispatched")
-	close(results)
+	log.Println("All inputs dispatched")
 }
 
 func sorter(results chan<- []int, in []int, sorters *sync.WaitGroup) {
